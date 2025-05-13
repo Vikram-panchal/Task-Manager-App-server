@@ -1,6 +1,7 @@
 const User = require("../models/models.User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const cloudinary = require("../middlewares/cloudinary");
 
 // Generate Token
 const generateToken = (id) => {
@@ -9,58 +10,16 @@ const generateToken = (id) => {
   });
 };
 
-// register new user
-// const registerUser = async (req, res) => {
-//   try {
-//     const { name, email, password, profileImageUrl, adminInviteToken } =
-//       req.body;
-//     // Check If user already exists
-//     const isUserexists = await User.findOne({ email });
-//     if (isUserexists) {
-//       res.status(400).json({ message: "User already exists" });
-//       return;
-//     }
-//     // Determine user role
-//     let role = "member";
-//     if (
-//       adminInviteToken &&
-//       adminInviteToken === process.env.ADMIN_INVITE_TOKEN
-//     ) {
-//       role = "admin";
-//     }
-//     // Hash password
-//     const salt = await bcrypt.genSalt(10);
-//     const hashedPassword = await bcrypt.hash(password, salt);
-//     // Create user
-//     const user = await User.create({
-//       name,
-//       email,
-//       password: hashedPassword,
-//       profileImageUrl,
-//       role,
-//     });
-//     if (user) {
-//       res.status(201).json({
-//         _id: user._id,
-//         name: user.name,
-//         email: user.email,
-//         profileImageUrl: user.profileImageUrl,
-//         role: user.role,
-//         token: generateToken(user._id),
-//       });
-//     }
-//   } catch (error) {
-//     res.status(500).json({ message: "Server Error", message: error.message });
-//   }
-// };
-
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, profileImageUrl, adminInviteToken } = req.body;
+    const { name, email, password, profileImageUrl, adminInviteToken } =
+      req.body;
 
     // Basic validation
     if (!name || !email || !password) {
-      return res.status(400).json({ message: "Please provide all required fields." });
+      return res
+        .status(400)
+        .json({ message: "Please provide all required fields." });
     }
 
     // Check if user already exists
@@ -68,10 +27,17 @@ const registerUser = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
+    let uploadResponse = "";
+    if (profileImageUrl) {
+      uploadResponse = await cloudinary.uploader.upload(profileImageUrl);
+    }
 
     // Role assignment
     let role = "member";
-    if (adminInviteToken && adminInviteToken === process.env.ADMIN_INVITE_TOKEN) {
+    if (
+      adminInviteToken &&
+      adminInviteToken === process.env.ADMIN_INVITE_TOKEN
+    ) {
       role = "admin";
     }
 
@@ -84,7 +50,7 @@ const registerUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      profileImageUrl,
+      profileImageUrl: uploadResponse.secure_url,
       role,
     });
 
@@ -108,7 +74,6 @@ const registerUser = async (req, res) => {
     });
   }
 };
-
 
 // login user
 const loginUser = async (req, res) => {

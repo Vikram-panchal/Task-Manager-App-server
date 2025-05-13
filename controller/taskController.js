@@ -1,4 +1,3 @@
-// const { Promise } = require("mongoose");
 const Task = require("../models/models.task");
 const mongoose = require("mongoose");
 const getTasks = async (req, res) => {
@@ -197,7 +196,7 @@ const updateTaskStatus = async (req, res) => {
 const updateTaskCheckList = async (req, res) => {
   try {
     const { todoCheckList } = req.body;
-    console.log(todoCheckList);
+    // console.log(todoCheckList);
     const task = await Task.findById(req.params.id);
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
@@ -246,11 +245,11 @@ const getDashboardData = async (req, res) => {
     const totalTasks = await Task.countDocuments();
     const pendingTasks = await Task.countDocuments({ status: "Pending" });
     const completedTasks = await Task.countDocuments({ status: "Completed" });
-    // const inProgressTasks = await Task.countDocuments({ status: "In Progress" });
+    const inProgressTasks = await Task.countDocuments({ status: "In Progress" });
     const overdueTasks = await Task.countDocuments({
       status: { $ne: "Completed" },
       dueDate: { $lt: new Date() },
-    });
+    }); 
 
     const taskStatuses = ["Pending", "In Progress", "Completed"];
     const taskDistributionRaw = await Task.aggregate([
@@ -296,6 +295,7 @@ const getDashboardData = async (req, res) => {
         totalTasks,
         pendingTasks,
         completedTasks,
+        inProgressTasks,
         overdueTasks,
       },
       charts: {
@@ -313,7 +313,7 @@ const getUserDashboardData = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    console.log(userId);
+    // console.log(userId);
     const totalTasks = await Task.countDocuments({ assignedTo: userId });
     const pendingTasks = await Task.countDocuments({
       assignedTo: userId,

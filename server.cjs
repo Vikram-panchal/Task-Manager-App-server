@@ -33,7 +33,9 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/repots", reportRoutes);
 
 //Server upload folder
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+
  //Start Server
 
 // if(process.env.NODE_ENV === "production"){
